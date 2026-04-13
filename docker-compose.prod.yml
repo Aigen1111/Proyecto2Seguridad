@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: proyecto_seguridad_db_prod
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ProyectoSeguridad
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proyecto_network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./ProyectoSeguridad
+      dockerfile: Dockerfile
+    container_name: proyecto_seguridad_api_prod
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ProyectoSeguridad;Username=postgres;Password=${DB_PASSWORD:-postgres}"
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "https://+:443"
+    ports:
+      - "443:443"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proyecto_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  proyecto_network:
+    driver: bridge
