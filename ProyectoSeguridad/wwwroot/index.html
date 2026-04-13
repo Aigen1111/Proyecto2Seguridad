@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ProyectoSeguridad</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #263347;
+  --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
+  --primary: #38bdf8; --primary-dark: #0284c7;
+  --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+  --purple: #a78bfa; --radius: 8px;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* NAV */
+nav {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem; height: 56px; position: sticky; top: 0; z-index: 100;
+}
+.nav-brand { color: var(--primary); font-weight: 700; font-size: 1rem; }
+.nav-right  { display: flex; align-items: center; gap: 1rem; }
+.nav-user   { color: var(--muted); font-size: 0.8rem; }
+.nav-role   { background: var(--primary-dark); color: #fff; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+
+/* LAYOUT */
+.layout { display: flex; height: calc(100vh - 56px); }
+aside { width: 200px; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem 0; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.aside-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 1.1rem; cursor: pointer; color: var(--muted); transition: all .15s; font-size: 0.875rem; border: none; background: none; width: 100%; text-align: left; }
+.aside-item:hover  { background: var(--surface2); color: var(--text); }
+.aside-item.active { background: var(--surface2); color: var(--primary); font-weight: 600; }
+.aside-item .icon  { font-size: 1rem; width: 20px; text-align: center; }
+
+main { flex: 1; overflow-y: auto; padding: 1.5rem; }
+
+/* CARDS */
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+
+/* FORMS */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.fg { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0.75rem; }
+label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+input, select, textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 0.5rem 0.75rem; font-size: 0.875rem; width: 100%; }
+input:focus, select:focus { outline: none; border-color: var(--primary); }
+textarea { resize: vertical; min-height: 70px; }
+select option { background: var(--surface); }
+
+/* BUTTONS */
+.btn { padding: 0.45rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity .15s; display: inline-flex; align-items: center; gap: 0.4rem; }
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: #0f172a; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-danger  { background: var(--red); color: #fff; }
+.btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-sm      { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+.btn-group   { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { text-align: left; padding: 0.6rem 0.75rem; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
+td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg); }
+
+/* BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+.b-green  { background: #14532d; color: #86efac; }
+.b-red    { background: #450a0a; color: #fca5a5; }
+.b-blue   { background: #0c4a6e; color: #7dd3fc; }
+.b-purple { background: #4c1d95; color: #c4b5fd; }
+.b-yellow { background: #451a03; color: #fde68a; }
+
+/* ALERTS */
+.alert { padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 0.75rem; display: none; }
+.alert-ok   { background: #134e4a; color: #6ee7b7; border: 1px solid #065f46; }
+.alert-err  { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-weight: 700; margin-bottom: 1rem; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+.close-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: 0; }
+
+/* LOGIN */
+#loginPage { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; width: 100%; max-width: 380px; }
+.login-logo  { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
+.login-title { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
+.login-sub   { text-align: center; color: var(--muted); font-size: 0.8rem; margin-bottom: 1.5rem; }
+.login-hint  { margin-top: 1rem; background: var(--bg); border-radius: 6px; padding: 0.75rem; font-size: 0.78rem; color: var(--muted); }
+.login-hint b { color: var(--text); }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card   { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+.stat-num    { font-size: 1.75rem; font-weight: 700; }
+.stat-lbl    { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.stat-blue   { border-left: 3px solid var(--primary); }
+.stat-green  { border-left: 3px solid var(--green); }
+.stat-red    { border-left: 3px solid var(--red); }
+.stat-purple { border-left: 3px solid var(--purple); }
+
+.hidden { display: none !important; }
+.row-actions { display: flex; gap: 4px; }
+
+#inactivityBanner { display: none; position: fixed; top: 56px; left: 0; right: 0; z-index: 150; background: #451a03; border-bottom: 1px solid #78350f; color: #fde68a; text-align: center; padding: 0.5rem; font-size: 0.82rem; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">🔐</div>
+    <div class="login-title">ProyectoSeguridad</div>
+    <div class="login-sub">Aplicación Web Segura · UTN ISW-1013</div>
+    <div id="loginAlert" class="alert alert-err"></div>
+    <div class="fg"><label>Usuario</label><input type="text" id="loginUser" placeholder="admin" autocomplete="username"></div>
+    <div class="fg"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:.5rem;justify-content:center" onclick="doLogin()">Iniciar sesión</button>
+    <div class="login-hint">
+      <b>Usuarios de prueba:</b><br>
+      admin / Admin123! &nbsp;·&nbsp; auditor / Auditor123! &nbsp;·&nbsp; registrador / Registrador123!
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" class="hidden">
+  <div id="inactivityBanner">⚠️ Tu sesión expirará pronto por inactividad (5 min). Mueve el mouse para renovarla.</div>
+
+  <nav>
+    <div class="nav-brand">🔐 ProyectoSeguridad</div>
+    <div class="nav-right">
+      <span class="nav-user" id="navUser"></span>
+      <span class="nav-role" id="navRole"></span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside id="sidebar"></aside>
+    <main>
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-title">📊 Dashboard</div>
+        <div class="stats">
+          <div class="stat-card stat-blue">  <div class="stat-num" id="statProd">—</div><div class="stat-lbl">Productos</div></div>
+          <div class="stat-card stat-green"> <div class="stat-num" id="statUsers">—</div><div class="stat-lbl">Usuarios activos</div></div>
+          <div class="stat-card stat-red">   <div class="stat-num" id="statLogs">—</div><div class="stat-lbl">Eventos hoy</div></div>
+          <div class="stat-card stat-purple"><div class="stat-num">3</div><div class="stat-lbl">Roles del sistema</div></div>
+        </div>
+        <div class="card">
+          <div style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;font-weight:600">Últimos eventos de auditoría</div>
+          <div id="dashLogs"><p style="color:var(--muted)">Cargando…</p></div>
+        </div>
+      </div>
+
+      <!-- PRODUCTOS -->
+      <div class="page" id="page-productos">
+        <div class="page-title">📦 Gestión de Productos</div>
+        <div id="prodAlert" class="alert"></div>
+        <div class="btn-group">
+          <button class="btn btn-success" id="btnNuevoProd" onclick="openProdModal()" style="display:none">+ Nuevo producto</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Código</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Cantidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="prodBody"><tr><td colspan="7" style="color:var(--muted)">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- USUARIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="page-title">👥 Gestión de Usuarios</div>
+        <div id="userAlert" class="alert"></div>
+        <div class="btn-group">
+          <button class="btn btn-success" id="btnNuevoUser" onclick="openUserModal()" style="display:none">+ Nuevo usuario</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Rol</th><th>Último login</th><th>Última IP</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="userBody"><tr><td colspan="8" style="color:var(--muted)">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDITORÍA -->
+      <div class="page" id="page-auditoria">
+        <div class="page-title">📋 Log de Auditoría</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Fecha / Hora</th><th>Acción</th><th>Ruta</th><th>Método</th><th>Código</th><th>IP</th><th>Detalle</th></tr></thead>
+              <tbody id="auditBody"><tr><td colspan="7" style="color:var(--muted)">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- API -->
+      <div class="page" id="page-api">
+        <div class="page-title">📡 Documentación API</div>
+        <div class="card">
+          <p style="color:var(--muted);margin-bottom:1rem">La documentación completa de todos los endpoints está disponible en Swagger UI.</p>
+          <a href="/swagger" target="_blank" class="btn btn-primary">Abrir Swagger UI →</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="overlay" id="prodModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="prodModalTitle">Nuevo Producto</span>
+      <button class="close-btn" onclick="closeModal('prodModal')">✕</button>
+    </div>
+    <div id="prodModalAlert" class="alert alert-err"></div>
+    <div class="form-row">
+      <div class="fg"><label>Código* (alfanumérico)</label><input id="pCodigo" placeholder="PRD-001" maxlength="20"></div>
+      <div class="fg"><label>Nombre*</label><input id="pNombre" placeholder="Nombre del producto" maxlength="100"></div>
+    </div>
+    <div class="fg"><label>Descripción*</label><textarea id="pDesc" placeholder="Descripción detallada del producto…"></textarea></div>
+    <div class="form-row">
+      <div class="fg"><label>Precio* ($)</label><input id="pPrecio" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="fg"><label>Cantidad*</label><input id="pCantidad" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('prodModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProd()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="userModalTitle">Nuevo Usuario</span>
+      <button class="close-btn" onclick="closeModal('userModal')">✕</button>
+    </div>
+    <div id="userModalAlert" class="alert alert-err"></div>
+    <div class="fg"><label>Username*</label><input id="uUsername" placeholder="nombre.apellido" maxlength="50"></div>
+    <div class="fg"><label>Email*</label><input id="uEmail" type="email" placeholder="correo@dominio.com"></div>
+    <div class="fg" id="uPassGroup"><label>Contraseña* (min 8 caracteres)</label><input id="uPassword" type="password" placeholder="••••••••"></div>
+    <div class="fg"><label>Rol*</label><select id="uRol"><option value="">— Seleccione un rol —</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR BORRADO -->
+<div class="overlay" id="confirmModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><span>Confirmar eliminación</span></div>
+    <p id="confirmMsg" style="color:var(--muted);margin-bottom:1rem;line-height:1.5"></p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════ STATE ════════════
+let state = {
+  token: null, user: null,
+  editProdId: null, editUserId: null,
+  deleteAction: null,
+  inactivityTimer: null,
+};
+
+// ════════════ SIDEBAR ════════════
+const MENUS = {
+  SuperAdmin:  ['dashboard','productos','usuarios','auditoria','api'],
+  Auditor:     ['dashboard','productos','usuarios','api'],
+  Registrador: ['dashboard','productos','usuarios','api'],
+};
+const MENU_META = {
+  dashboard: { icon:'📊', label:'Dashboard' },
+  productos:  { icon:'📦', label:'Productos' },
+  usuarios:   { icon:'👥', label:'Usuarios' },
+  auditoria:  { icon:'📋', label:'Auditoría' },
+  api:        { icon:'📡', label:'API / Swagger' },
+};
+
+function renderSidebar() {
+  const items = MENUS[state.user?.role] || ['dashboard','productos','api'];
+  document.getElementById('sidebar').innerHTML = items.map(k =>
+    `<button class="aside-item" id="nav-${k}" onclick="showPage('${k}')">
+       <span class="icon">${MENU_META[k].icon}</span>${MENU_META[k].label}
+     </button>`).join('');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.aside-item').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  const nb = document.getElementById('nav-' + name);
+  if (pg) pg.classList.add('active');
+  if (nb) nb.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'productos')  loadProductos();
+  if (name === 'usuarios')   loadUsuarios();
+  if (name === 'auditoria')  loadAuditoria();
+}
+
+// ════════════ AUTH ════════════
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  showAlert('loginAlert','');
+  if (!username || !password) { showAlert('loginAlert','Ingresa usuario y contraseña'); return; }
+  try {
+    const res = await fetch('/api/auth/login', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) { showAlert('loginAlert', data.message || 'Credenciales incorrectas'); return; }
+    state.token = data.token;
+    // Decode JWT
+    try {
+      const payload = JSON.parse(atob(data.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      const ns = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
+      const msns = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/';
+      state.user = {
+        id:       payload[ns+'nameidentifier'],
+        username: payload[ns+'name'],
+        email:    payload[ns+'emailaddress'],
+        role:     payload[msns+'role'],
+      };
+    } catch { state.user = { username, role:'User' }; }
+
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('appShell').classList.remove('hidden');
+    document.getElementById('navUser').textContent = '👤 ' + state.user.username;
+    document.getElementById('navRole').textContent = state.user.role;
+
+    const isSA  = state.user.role === 'SuperAdmin';
+    const isReg = state.user.role === 'Registrador';
+    document.getElementById('btnNuevoProd').style.display = (isSA||isReg) ? 'inline-flex':'none';
+    document.getElementById('btnNuevoUser').style.display = isSA ? 'inline-flex':'none';
+
+    renderSidebar();
+    startInactivity();
+    showPage('dashboard');
+  } catch(e) { showAlert('loginAlert','Error de conexión: ' + e.message); }
+}
+
+function doLogout() {
+  clearTimeout(state.inactivityTimer);
+  state = { token:null, user:null, editProdId:null, editUserId:null, deleteAction:null, inactivityTimer:null };
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('inactivityBanner').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter' && document.getElementById('loginPage').style.display!=='none') doLogin();
+});
+
+// ════════════ INACTIVITY ════════════
+function startInactivity() {
+  clearTimeout(state.inactivityTimer);
+  document.getElementById('inactivityBanner').style.display = 'none';
+  state.inactivityTimer = setTimeout(() => {
+    document.getElementById('inactivityBanner').style.display = 'block';
+  }, 4.5 * 60 * 1000);
+}
+['mousemove','keydown','click'].forEach(ev =>
+  document.addEventListener(ev, () => { if (state.token) startInactivity(); })
+);
+
+// ════════════ API HELPER ════════════
+async function api(method, url, body) {
+  const opts = { method, credentials:'include', headers:{'Content-Type':'application/json'} };
+  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    const d = await res.json().catch(()=>({}));
+    if (d.message?.toLowerCase().includes('inactividad')) {
+      doLogout(); alert('Sesión expirada por inactividad. Vuelve a iniciar sesión.');
+    }
+    throw new Error(d.message || 'No autorizado (401)');
+  }
+  return res;
+}
+
+// ════════════ DASHBOARD ════════════
+async function loadDashboard() {
+  try {
+    const [pRes, uRes] = await Promise.all([api('GET','/api/productos'), api('GET','/api/usuarios')]);
+    if (pRes.ok) document.getElementById('statProd').textContent  = (await pRes.json()).length;
+    if (uRes.ok) document.getElementById('statUsers').textContent = (await uRes.json()).length;
+  } catch {}
+
+  if (state.user?.role === 'SuperAdmin') {
+    try {
+      const aRes = await api('GET','/api/auditoria');
+      if (aRes.ok) {
+        const logs = await aRes.json();
+        const today = new Date().toDateString();
+        document.getElementById('statLogs').textContent = logs.filter(l => new Date(l.fecha).toDateString()===today).length;
+        document.getElementById('dashLogs').innerHTML = logs.slice(0,5).map(l => `
+          <div style="padding:.5rem 0;border-bottom:1px solid var(--border);display:flex;gap:1rem;align-items:center;font-size:.8rem">
+            <span style="color:var(--muted);white-space:nowrap">${fmtDate(l.fecha)}</span>
+            <span>${escHtml(l.accion)}</span>
+            <code style="color:var(--primary);font-size:.75rem">${escHtml(l.ruta)}</code>
+            <span class="badge ${l.codigoRespuesta<400?'b-green':'b-red'}">${l.codigoRespuesta}</span>
+          </div>`).join('') || '<p style="color:var(--muted)">Sin eventos.</p>';
+      }
+    } catch(e) { document.getElementById('dashLogs').innerHTML = `<p style="color:var(--red)">${escHtml(e.message)}</p>`; }
+  } else {
+    document.getElementById('statLogs').textContent = '—';
+    document.getElementById('dashLogs').innerHTML = '<p style="color:var(--muted);font-size:.85rem">Solo SuperAdmin puede ver los logs de auditoría.</p>';
+  }
+}
+
+// ════════════ PRODUCTOS ════════════
+async function loadProductos() {
+  const tbody = document.getElementById('prodBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">Cargando…</td></tr>';
+  try {
+    const res = await api('GET','/api/productos');
+    if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
+    const prods = await res.json();
+    const role = state.user?.role;
+    const canWrite  = role==='SuperAdmin' || role==='Registrador';
+    const canDelete = role==='SuperAdmin';
+    if (!prods.length) { tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted)">Sin productos registrados.</td></tr>'; return; }
+    tbody.innerHTML = prods.map(p=>`<tr>
+      <td><code style="color:var(--primary)">${escHtml(p.codigo)}</code></td>
+      <td>${escHtml(p.nombre)}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.descripcion)}">${escHtml(p.descripcion)}</td>
+      <td>$${Number(p.precio).toFixed(2)}</td>
+      <td>${p.cantidad}</td>
+      <td><span class="badge ${p.activo?'b-green':'b-red'}">${p.activo?'Activo':'Inactivo'}</span></td>
+      <td><div class="row-actions">
+        ${canWrite  ? `<button class="btn btn-ghost btn-sm" onclick="openProdModal(${p.id})">Editar</button>` : ''}
+        ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="askDelete('producto',${p.id},'${escHtml(p.nombre).replace(/'/g,"\\'")}')">Eliminar</button>` : ''}
+        ${!canWrite&&!canDelete ? '<span style="color:var(--muted);font-size:.78rem">Solo lectura</span>' : ''}
+      </div></td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
+}
+
+async function openProdModal(id) {
+  state.editProdId = id || null;
+  document.getElementById('prodModalTitle').textContent = id ? 'Editar Producto' : 'Nuevo Producto';
+  showAlert('prodModalAlert','');
+  ['pCodigo','pNombre','pDesc','pPrecio','pCantidad'].forEach(f => document.getElementById(f).value='');
+  if (id) {
+    try {
+      const res = await api('GET',`/api/productos/${id}`);
+      const p = await res.json();
+      document.getElementById('pCodigo').value   = p.codigo;
+      document.getElementById('pNombre').value   = p.nombre;
+      document.getElementById('pDesc').value     = p.descripcion;
+      document.getElementById('pPrecio').value   = p.precio;
+      document.getElementById('pCantidad').value = p.cantidad;
+    } catch(e) { showAlert('prodModalAlert', e.message); }
+  }
+  openModal('prodModal');
+}
+
+async function saveProd() {
+  const codigo      = document.getElementById('pCodigo').value.trim();
+  const nombre      = document.getElementById('pNombre').value.trim();
+  const descripcion = document.getElementById('pDesc').value.trim();
+  const precio      = parseFloat(document.getElementById('pPrecio').value);
+  const cantidad    = parseInt(document.getElementById('pCantidad').value);
+
+  if (!codigo||!nombre||!descripcion) { showAlert('prodModalAlert','Todos los campos marcados con * son obligatorios.'); return; }
+  if (!/^[a-zA-Z0-9\-]+$/.test(codigo)) { showAlert('prodModalAlert','El código solo acepta letras, números y guiones.'); return; }
+  if (isNaN(precio)||precio<0) { showAlert('prodModalAlert','Ingresa un precio válido (≥ 0).'); return; }
+  if (isNaN(cantidad)||cantidad<0) { showAlert('prodModalAlert','Ingresa una cantidad válida (≥ 0).'); return; }
+
+  try {
+    const method = state.editProdId ? 'PUT' : 'POST';
+    const url    = state.editProdId ? `/api/productos/${state.editProdId}` : '/api/productos';
+    const res = await api(method, url, { codigo, nombre, descripcion, precio, cantidad });
+    const data = await res.json();
+    if (!res.ok) { showAlert('prodModalAlert', data.message||'Error al guardar'); return; }
+    closeModal('prodModal');
+    showAlert('prodAlert', `Producto ${state.editProdId?'actualizado':'creado'} exitosamente.`, 'ok');
+    loadProductos();
+  } catch(e) { showAlert('prodModalAlert', e.message); }
+}
+
+// ════════════ USUARIOS ════════════
+let rolesCache = [];
+
+async function loadRoles() {
+  if (rolesCache.length) return;
+  try { const r=await api('GET','/api/usuarios/roles'); if(r.ok) rolesCache=await r.json(); } catch {}
+}
+
+async function loadUsuarios() {
+  const tbody = document.getElementById('userBody');
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted)">Cargando…</td></tr>';
+  try {
+    const res = await api('GET','/api/usuarios');
+    if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
+    const users = await res.json();
+    const isSA = state.user?.role === 'SuperAdmin';
+    if (!users.length) { tbody.innerHTML='<tr><td colspan="8" style="color:var(--muted)">Sin usuarios.</td></tr>'; return; }
+    tbody.innerHTML = users.map(u=>`<tr>
+      <td>${u.id}</td>
+      <td><b>${escHtml(u.username)}</b></td>
+      <td>${escHtml(u.email)}</td>
+      <td><span class="badge ${roleBadge(u.rol?.nombre)}">${escHtml(u.rol?.nombre||'?')}</span></td>
+      <td style="white-space:nowrap">${u.ultimoLogin ? fmtDate(u.ultimoLogin) : '<span style="color:var(--muted)">Nunca</span>'}</td>
+      <td>${u.ultimaIP ? escHtml(u.ultimaIP) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td><span class="badge ${u.activo?'b-green':'b-red'}">${u.activo?'Activo':'Inactivo'}</span></td>
+      <td><div class="row-actions">
+        ${isSA ? `<button class="btn btn-ghost btn-sm" onclick="openUserModal(${u.id})">Editar</button>` : ''}
+        ${isSA && u.id != state.user?.id ? `<button class="btn btn-danger btn-sm" onclick="askDelete('usuario',${u.id},'${escHtml(u.username).replace(/'/g,"\\'")}')">Eliminar</button>` : ''}
+        ${!isSA ? '<span style="color:var(--muted);font-size:.78rem">Solo lectura</span>' : ''}
+      </div></td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="8" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
+}
+
+async function openUserModal(id) {
+  await loadRoles();
+  state.editUserId = id || null;
+  document.getElementById('userModalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario';
+  showAlert('userModalAlert','');
+  ['uUsername','uEmail','uPassword'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('uPassGroup').style.display = id ? 'none' : 'flex';
+  const sel = document.getElementById('uRol');
+  sel.innerHTML = '<option value="">— Seleccione un rol —</option>' +
+    rolesCache.map(r=>`<option value="${r.id}">${escHtml(r.nombre)}</option>`).join('');
+  if (id) {
+    try {
+      const res = await api('GET',`/api/usuarios/${id}`);
+      const u = await res.json();
+      document.getElementById('uUsername').value = u.username;
+      document.getElementById('uEmail').value    = u.email;
+      sel.value = u.rolId;
+    } catch(e) { showAlert('userModalAlert', e.message); }
+  }
+  openModal('userModal');
+}
+
+async function saveUser() {
+  const username = document.getElementById('uUsername').value.trim();
+  const email    = document.getElementById('uEmail').value.trim();
+  const password = document.getElementById('uPassword').value;
+  const rolId    = parseInt(document.getElementById('uRol').value);
+
+  if (!username||!email||!rolId) { showAlert('userModalAlert','Todos los campos son obligatorios.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('userModalAlert','El email no tiene un formato válido.'); return; }
+  if (!state.editUserId && password.length<8) { showAlert('userModalAlert','La contraseña debe tener mínimo 8 caracteres.'); return; }
+
+  const body = state.editUserId ? { username, email, rolId } : { username, email, password, rolId };
+  try {
+    const method = state.editUserId ? 'PUT' : 'POST';
+    const url    = state.editUserId ? `/api/usuarios/${state.editUserId}` : '/api/usuarios';
+    const res = await api(method, url, body);
+    const data = await res.json();
+    if (!res.ok) { showAlert('userModalAlert', data.message||'Error al guardar'); return; }
+    closeModal('userModal');
+    showAlert('userAlert', `Usuario ${state.editUserId?'actualizado':'creado'} exitosamente.`, 'ok');
+    loadUsuarios();
+  } catch(e) { showAlert('userModalAlert', e.message); }
+}
+
+// ════════════ AUDITORÍA ════════════
+async function loadAuditoria() {
+  const tbody = document.getElementById('auditBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">Cargando…</td></tr>';
+  try {
+    const res = await api('GET','/api/auditoria');
+    if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
+    const logs = await res.json();
+    if (!logs.length) { tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted)">Sin registros de auditoría.</td></tr>'; return; }
+    tbody.innerHTML = logs.slice(0,100).map(l=>`<tr>
+      <td style="white-space:nowrap">${fmtDate(l.fecha)}</td>
+      <td>${escHtml(l.accion)}</td>
+      <td><code style="font-size:.75rem">${escHtml(l.ruta)}</code></td>
+      <td><span class="badge b-blue">${escHtml(l.metodoHttp)}</span></td>
+      <td><span class="badge ${l.codigoRespuesta<400?'b-green':'b-red'}">${l.codigoRespuesta}</span></td>
+      <td>${escHtml(l.ipAddress)}</td>
+      <td style="max-width:200px;font-size:.75rem;color:var(--muted)">${escHtml(l.detalles||'')}</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
+}
+
+// ════════════ DELETE ════════════
+function askDelete(type, id, name) {
+  document.getElementById('confirmMsg').textContent =
+    `¿Seguro que deseas eliminar ${type==='producto'?'el producto':'al usuario'} "${name}"?`;
+  state.deleteAction = { type, id };
+  openModal('confirmModal');
+}
+async function confirmDelete() {
+  const { type, id } = state.deleteAction;
+  closeModal('confirmModal');
+  try {
+    const url = type==='producto' ? `/api/productos/${id}` : `/api/usuarios/${id}`;
+    const res = await api('DELETE', url);
+    if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
+    const alertId = type==='producto' ? 'prodAlert' : 'userAlert';
+    showAlert(alertId, `${type==='producto'?'Producto':'Usuario'} eliminado correctamente.`, 'ok');
+    if (type==='producto') loadProductos(); else loadUsuarios();
+  } catch(e) {
+    showAlert(type==='producto'?'prodAlert':'userAlert', e.message);
+  }
+}
+
+// ════════════ HELPERS ════════════
+function escHtml(s) {
+  if (s==null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('es-CR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function roleBadge(rol) {
+  return { SuperAdmin:'b-red', Auditor:'b-yellow', Registrador:'b-blue' }[rol] || 'b-purple';
+}
+function showAlert(id, msg, type='err') {
+  const el = document.getElementById(id); if (!el) return;
+  if (!msg) { el.style.display='none'; return; }
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type==='ok') setTimeout(()=>el.style.display='none', 4000);
+}
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(ov =>
+  ov.addEventListener('click', e => { if (e.target===ov) ov.classList.remove('open'); })
+);
+</script>
+</body>
+</html>

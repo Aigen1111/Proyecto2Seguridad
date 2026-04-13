@@ -67,7 +67,7 @@ namespace ProyectoSeguridad.Controllers
             Response.Cookies.Append("Authorization", token!, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = false, // Cambiar a true en producción con HTTPS
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });

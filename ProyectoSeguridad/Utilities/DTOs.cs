@@ -67,3 +67,40 @@ namespace ProyectoSeguridad.Utilities
         public decimal Precio { get; set; }
     }
 }
+
+namespace ProyectoSeguridad.Utilities
+{
+    public class CreateUsuarioRequest
+    {
+        [Required(ErrorMessage = "El usuario es requerido")]
+        [StringLength(50, MinimumLength = 3)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El email es requerido")]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es requerida")]
+        [StringLength(100, MinimumLength = 8)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El rol es requerido")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un rol válido")]
+        public int RolId { get; set; }
+    }
+
+    public class UpdateUsuarioRequest
+    {
+        [Required(ErrorMessage = "El usuario es requerido")]
+        [StringLength(50, MinimumLength = 3)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El email es requerido")]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El rol es requerido")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un rol válido")]
+        public int RolId { get; set; }
+    }
+}

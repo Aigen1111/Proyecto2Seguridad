@@ -105,21 +105,25 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Migraciones de BD aplicadas exitosamente");
 
         // Seeding de datos iniciales
-        if (!context.Usuarios.Any(u => u.Username == "admin"))
+        var admin = await context.Usuarios.FirstOrDefaultAsync(u => u.Username == "admin");
+        if (admin == null)
         {
-            var admin = new AppModels.Usuario
+            admin = new AppModels.Usuario
             {
                 Username = "admin",
                 Email = "admin@seguridad.local",
                 PasswordHash = authService.HashPassword("Admin123!"),
-                RolId = 1, // SuperAdmin
+                RolId = 1,
                 Activo = true,
                 FechaCreacion = DateTime.UtcNow
             };
-
             context.Usuarios.Add(admin);
-            await context.SaveChangesAsync();
-            logger.LogInformation("Usuario administrador creado: admin");
+        }
+        else
+        {
+            // Siempre corregir el hash si era el dummy
+            if (admin.PasswordHash.Contains("dummy"))
+                admin.PasswordHash = authService.HashPassword("Admin123!");
         }
 
         // Crear usuario Auditor de demostración
@@ -175,9 +179,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// ==================== ARCHIVOS ESTÁTICOS (wwwroot) ====================
+app.UseDefaultFiles();   // sirve index.html cuando se accede a /
+app.UseStaticFiles();    // sirve css/, js/, etc.
+
 // Middlewares de seguridad
 app.UseSecurityHeaders();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection(); // Deshabilitado para desarrollo local sin HTTPS, habilitar en producción
 app.UseAuditoria();
 app.UseInactividad();
 

@@ -15,11 +15,16 @@ namespace ProyectoSeguridad.Data
         public DbSet<Producto> Productos { get; set; }
         public DbSet<AuditoriaLog> AuditoriaLogs { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.ConfigureWarnings(w =>
+                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración de claves foráneas
             modelBuilder.Entity<Usuario>()
                 .HasOne(u => u.Rol)
                 .WithMany(r => r.Usuarios)
@@ -38,18 +43,14 @@ namespace ProyectoSeguridad.Data
                 .HasForeignKey(a => a.UsuarioId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Índices para optimización y seguridad
             modelBuilder.Entity<Usuario>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
+                .HasIndex(u => u.Username).IsUnique();
 
             modelBuilder.Entity<Usuario>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+                .HasIndex(u => u.Email).IsUnique();
 
             modelBuilder.Entity<Producto>()
-                .HasIndex(p => p.Codigo)
-                .IsUnique();
+                .HasIndex(p => p.Codigo).IsUnique();
 
             modelBuilder.Entity<AuditoriaLog>()
                 .HasIndex(a => a.Timestamp);
@@ -57,22 +58,21 @@ namespace ProyectoSeguridad.Data
             modelBuilder.Entity<AuditoriaLog>()
                 .HasIndex(a => a.IPOrigen);
 
-            // Data seeding de Roles
+            // Seeding de roles (esto SÍ tiene migración, no cambiar)
             modelBuilder.Entity<Rol>().HasData(
-                new Rol { Id = 1, Nombre = "SuperAdmin", Descripcion = "Acceso total al sistema" },
-                new Rol { Id = 2, Nombre = "Auditor", Descripcion = "Visualiza logs y auditoría" },
-                new Rol { Id = 3, Nombre = "Registrador", Descripcion = "Gestiona productos" }
+                new Rol { Id = 1, Nombre = "SuperAdmin",   Descripcion = "Acceso total al sistema" },
+                new Rol { Id = 2, Nombre = "Auditor",      Descripcion = "Visualiza logs y auditoría" },
+                new Rol { Id = 3, Nombre = "Registrador",  Descripcion = "Gestiona productos" }
             );
 
-            // Data seeding de Usuario SuperAdmin (password por defecto: Admin123!)
-            // El hash será generado en el Application Startup
+            // Seeding de admin con hash REAL de bcrypt (Admin123! con cost=12)
             modelBuilder.Entity<Usuario>().HasData(
                 new Usuario
                 {
                     Id = 1,
                     Username = "admin",
                     Email = "admin@seguridad.local",
-                    PasswordHash = "$2b$12$dummyhashforseeding", // Será actualizado en el startup
+                    PasswordHash = "$2b$12$wQDdQ6SyBfoW0unDwUHxu.NInsxHkHNK.U7fQHFqSa0w6h6gOWIVG",
                     RolId = 1,
                     Activo = true,
                     FechaCreacion = new DateTime(2026, 4, 13, 0, 0, 0, DateTimeKind.Utc)
