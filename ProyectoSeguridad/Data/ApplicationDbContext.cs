@@ -75,7 +75,7 @@ namespace ProyectoSeguridad.Data
                     PasswordHash = "$2b$12$dummyhashforseeding", // Será actualizado en el startup
                     RolId = 1,
                     Activo = true,
-                    FechaCreacion = DateTime.UtcNow
+                    FechaCreacion = new DateTime(2026, 4, 13, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
         }

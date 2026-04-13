@@ -1,0 +1,19 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=${DB_HOST};Port=5432;Database=ProyectoSeguridad;Username=${DB_USER};Password=${DB_PASSWORD}"
+  },
+  "Jwt": {
+    "SecretKey": "${JWT_SECRET_KEY}",
+    "Issuer": "ProyectoSeguridad",
+    "Audience": "ProyectoSeguridad",
+    "ExpirationMinutes": 60
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft.AspNetCore": "Error",
+      "Microsoft.EntityFrameworkCore": "Error"
+    }
+  },
+  "AllowedHosts": "${ALLOWED_HOSTS}"
+}

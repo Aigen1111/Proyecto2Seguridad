@@ -14,43 +14,14 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Secrets and Configuration
+appsettings.Development.json
+appsettings.*.json
+.env
+.env.local
+.env.*.local
+secrets.json
+
 # VS Code
 .vscode/
 *.code-workspace
-
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Rider
-.idea/
-*.sln.iml
-
-# Entity Framework
-appsettings.Development.json
-
-# Environment variables
-.env
-.env.local
-
-# NuGet
-*.nupkg
-*.snupkg
-
-# Package lock files
-packages.lock.json
-
-# IDE
-.vs/
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Application specific
-logs/
-*.log
