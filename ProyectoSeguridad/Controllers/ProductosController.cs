@@ -140,7 +140,7 @@ namespace ProyectoSeguridad.Controllers
         /// Actualiza un producto. Solo SuperAdmin
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin,Registrador")]
         public async Task<IActionResult> UpdateProducto(int id, [FromBody] ProductoDto dto)
         {
             if (!ModelState.IsValid)
@@ -197,7 +197,7 @@ namespace ProyectoSeguridad.Controllers
         /// Elimina un producto. Solo SuperAdmin
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin,Registrador")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
             try
