@@ -195,8 +195,8 @@ tr:hover td { background: var(--bg); }
         <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Rol</th><th>Último login</th><th>Última IP</th><th>Estado</th><th>Acciones</th></tr></thead>
-              <tbody id="userBody"><tr><td colspan="8" style="color:var(--muted)">Cargando…</td></tr></tbody>
+              <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Rol</th><th>Permisos</th><th>Último login</th><th>Última IP</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="userBody"><tr><td colspan="9" style="color:var(--muted)">Cargando…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -237,7 +237,7 @@ tr:hover td { background: var(--bg); }
     </div>
     <div id="prodModalAlert" class="alert alert-err"></div>
     <div class="form-row">
-      <div class="fg"><label>Código* (alfanumérico)</label><input id="pCodigo" placeholder="PRD-001" maxlength="20"></div>
+      <div class="fg"><label>Código* (alfanumérico)</label><input id="pCodigo" placeholder="PRD001" maxlength="20"></div>
       <div class="fg"><label>Nombre*</label><input id="pNombre" placeholder="Nombre del producto" maxlength="100"></div>
     </div>
     <div class="fg"><label>Descripción*</label><textarea id="pDesc" placeholder="Descripción detallada del producto…"></textarea></div>
@@ -345,13 +345,11 @@ async function doLogin() {
     // Decode JWT
     try {
       const payload = JSON.parse(atob(data.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      const ns = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
-      const msns = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/';
       state.user = {
-        id:       payload[ns+'nameidentifier'],
-        username: payload[ns+'name'],
-        email:    payload[ns+'emailaddress'],
-        role:     payload[msns+'role'],
+        id:       payload['nameid'],
+        username: payload['unique_name'],
+        email:    payload['email'],
+        role:     payload['role'],
       };
     } catch { state.user = { username, role:'User' }; }
 
@@ -412,6 +410,15 @@ async function api(method, url, body) {
   return res;
 }
 
+function getRolPermisos(rol) {
+  const p = {
+    SuperAdmin: 'CRUD usuarios, CRUD productos, logs, roles',
+    Auditor:    'Lectura usuarios, lectura productos',
+    Registrador:'CRUD productos, lectura usuarios'
+  };
+  return p[rol] || '—';
+}
+
 // ════════════ DASHBOARD ════════════
 async function loadDashboard() {
   try {
@@ -424,15 +431,16 @@ async function loadDashboard() {
     try {
       const aRes = await api('GET','/api/auditoria');
       if (aRes.ok) {
-        const logs = await aRes.json();
+        const data = await aRes.json();
+        const logs = data.logs;
         const today = new Date().toDateString();
-        document.getElementById('statLogs').textContent = logs.filter(l => new Date(l.fecha).toDateString()===today).length;
+        document.getElementById('statLogs').textContent = logs.filter(l => new Date(l.timestamp).toDateString()===today).length;
         document.getElementById('dashLogs').innerHTML = logs.slice(0,5).map(l => `
           <div style="padding:.5rem 0;border-bottom:1px solid var(--border);display:flex;gap:1rem;align-items:center;font-size:.8rem">
-            <span style="color:var(--muted);white-space:nowrap">${fmtDate(l.fecha)}</span>
-            <span>${escHtml(l.accion)}</span>
-            <code style="color:var(--primary);font-size:.75rem">${escHtml(l.ruta)}</code>
-            <span class="badge ${l.codigoRespuesta<400?'b-green':'b-red'}">${l.codigoRespuesta}</span>
+            <span style="color:var(--muted);white-space:nowrap">${fmtDate(l.timestamp)}</span>
+            <span>${escHtml(l.evento)}</span>
+            <code style="color:var(--primary);font-size:.75rem">${escHtml(l.rutaSolicitada)}</code>
+            <span class="badge ${l.codigoHTTP<400?'b-green':'b-red'}">${l.codigoHTTP}</span>
           </div>`).join('') || '<p style="color:var(--muted)">Sin eventos.</p>';
       }
     } catch(e) { document.getElementById('dashLogs').innerHTML = `<p style="color:var(--red)">${escHtml(e.message)}</p>`; }
@@ -452,7 +460,7 @@ async function loadProductos() {
     const prods = await res.json();
     const role = state.user?.role;
     const canWrite  = role==='SuperAdmin' || role==='Registrador';
-    const canDelete = role==='SuperAdmin';
+    const canDelete = role==='SuperAdmin' || role==='Registrador';
     if (!prods.length) { tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted)">Sin productos registrados.</td></tr>'; return; }
     tbody.innerHTML = prods.map(p=>`<tr>
       <td><code style="color:var(--primary)">${escHtml(p.codigo)}</code></td>
@@ -460,7 +468,7 @@ async function loadProductos() {
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.descripcion)}">${escHtml(p.descripcion)}</td>
       <td>$${Number(p.precio).toFixed(2)}</td>
       <td>${p.cantidad}</td>
-      <td><span class="badge ${p.activo?'b-green':'b-red'}">${p.activo?'Activo':'Inactivo'}</span></td>
+      <td><span class="badge b-green">Activo</span></td>
       <td><div class="row-actions">
         ${canWrite  ? `<button class="btn btn-ghost btn-sm" onclick="openProdModal(${p.id})">Editar</button>` : ''}
         ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="askDelete('producto',${p.id},'${escHtml(p.nombre).replace(/'/g,"\\'")}')">Eliminar</button>` : ''}
@@ -497,7 +505,7 @@ async function saveProd() {
   const cantidad    = parseInt(document.getElementById('pCantidad').value);
 
   if (!codigo||!nombre||!descripcion) { showAlert('prodModalAlert','Todos los campos marcados con * son obligatorios.'); return; }
-  if (!/^[a-zA-Z0-9\-]+$/.test(codigo)) { showAlert('prodModalAlert','El código solo acepta letras, números y guiones.'); return; }
+  if (!/^[A-Z0-9]+$/.test(codigo)) { showAlert('prodModalAlert','El código solo acepta letras mayúsculas y números, sin espacios ni guiones.'); return; }
   if (isNaN(precio)||precio<0) { showAlert('prodModalAlert','Ingresa un precio válido (≥ 0).'); return; }
   if (isNaN(cantidad)||cantidad<0) { showAlert('prodModalAlert','Ingresa una cantidad válida (≥ 0).'); return; }
 
@@ -523,18 +531,19 @@ async function loadRoles() {
 
 async function loadUsuarios() {
   const tbody = document.getElementById('userBody');
-  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted)">Cargando…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted)">Cargando…</td></tr>';
   try {
     const res = await api('GET','/api/usuarios');
     if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
     const users = await res.json();
     const isSA = state.user?.role === 'SuperAdmin';
-    if (!users.length) { tbody.innerHTML='<tr><td colspan="8" style="color:var(--muted)">Sin usuarios.</td></tr>'; return; }
+    if (!users.length) { tbody.innerHTML='<tr><td colspan="9" style="color:var(--muted)">Sin usuarios.</td></tr>'; return; }
     tbody.innerHTML = users.map(u=>`<tr>
       <td>${u.id}</td>
       <td><b>${escHtml(u.username)}</b></td>
       <td>${escHtml(u.email)}</td>
       <td><span class="badge ${roleBadge(u.rol?.nombre)}">${escHtml(u.rol?.nombre||'?')}</span></td>
+      <td style="font-size:.75rem;color:var(--muted)">${getRolPermisos(u.rol?.nombre)}</td>
       <td style="white-space:nowrap">${u.ultimoLogin ? fmtDate(u.ultimoLogin) : '<span style="color:var(--muted)">Nunca</span>'}</td>
       <td>${u.ultimaIP ? escHtml(u.ultimaIP) : '<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="badge ${u.activo?'b-green':'b-red'}">${u.activo?'Activo':'Inactivo'}</span></td>
@@ -544,7 +553,7 @@ async function loadUsuarios() {
         ${!isSA ? '<span style="color:var(--muted);font-size:.78rem">Solo lectura</span>' : ''}
       </div></td>
     </tr>`).join('');
-  } catch(e) { tbody.innerHTML=`<tr><td colspan="8" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="9" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
 }
 
 async function openUserModal(id) {
@@ -599,15 +608,15 @@ async function loadAuditoria() {
   try {
     const res = await api('GET','/api/auditoria');
     if (!res.ok) { const d=await res.json(); throw new Error(d.message); }
-    const logs = await res.json();
+    const { logs } = await res.json();
     if (!logs.length) { tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted)">Sin registros de auditoría.</td></tr>'; return; }
     tbody.innerHTML = logs.slice(0,100).map(l=>`<tr>
-      <td style="white-space:nowrap">${fmtDate(l.fecha)}</td>
-      <td>${escHtml(l.accion)}</td>
-      <td><code style="font-size:.75rem">${escHtml(l.ruta)}</code></td>
-      <td><span class="badge b-blue">${escHtml(l.metodoHttp)}</span></td>
-      <td><span class="badge ${l.codigoRespuesta<400?'b-green':'b-red'}">${l.codigoRespuesta}</span></td>
-      <td>${escHtml(l.ipAddress)}</td>
+      <td style="white-space:nowrap">${fmtDate(l.timestamp)}</td>
+      <td>${escHtml(l.evento)}</td>
+      <td><code style="font-size:.75rem">${escHtml(l.rutaSolicitada)}</code></td>
+      <td><span class="badge b-blue">${escHtml(l.metodo)}</span></td>
+      <td><span class="badge ${l.codigoHTTP<400?'b-green':'b-red'}">${l.codigoHTTP}</span></td>
+      <td>${escHtml(l.ipOrigen)}</td>
       <td style="max-width:200px;font-size:.75rem;color:var(--muted)">${escHtml(l.detalles||'')}</td>
     </tr>`).join('');
   } catch(e) { tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red)">${escHtml(e.message)}</td></tr>`; }
