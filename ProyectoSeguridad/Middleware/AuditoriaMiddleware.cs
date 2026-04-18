@@ -79,6 +79,7 @@ namespace ProyectoSeguridad.Middleware
                     );
                 }
 
+                responseBody.Seek(0, SeekOrigin.Begin);
                 await responseBody.CopyToAsync(originalBodyStream);
             }
         }
