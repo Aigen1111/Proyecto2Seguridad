@@ -123,7 +123,11 @@ using (var scope = app.Services.CreateScope())
         {
             // Siempre corregir el hash si era el dummy
             if (admin.PasswordHash.Contains("dummy"))
+            {
                 admin.PasswordHash = authService.HashPassword("Admin123!");
+                await context.SaveChangesAsync();
+                logger.LogInformation("Hash del admin corregido exitosamente");
+            }
         }
 
         // Crear usuario Auditor de demostración
@@ -180,19 +184,22 @@ if (app.Environment.IsDevelopment())
 }
 
 // ==================== ARCHIVOS ESTÁTICOS (wwwroot) ====================
+// Middlewares de seguridad
+app.UseSecurityHeaders();
+
 app.UseDefaultFiles();   // sirve index.html cuando se accede a /
 app.UseStaticFiles();    // sirve css/, js/, etc.
 
-// Middlewares de seguridad
-app.UseSecurityHeaders();
+
 //app.UseHttpsRedirection(); // Deshabilitado para desarrollo local sin HTTPS, habilitar en producción
 app.UseAuditoria();
 app.UseInactividad();
 
+app.UseCors("AllowLocalhost");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseCors("AllowLocalhost");
+
 
 app.MapControllers();
 
