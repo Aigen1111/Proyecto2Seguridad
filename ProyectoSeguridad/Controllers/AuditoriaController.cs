@@ -26,7 +26,8 @@ namespace ProyectoSeguridad.Controllers
         /// Obtiene logs de auditoría. Solo SuperAdmin y Auditor
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin,Auditor")]
+        [Authorize(Roles = "SuperAdmin")]
+
         public async Task<IActionResult> GetAuditLogs([FromQuery] int? usuarioId, [FromQuery] string? ipOrigen, [FromQuery] int diasAtras = 7)
         {
             try
