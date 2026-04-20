@@ -6,11 +6,28 @@ Aplicación web segura desarrollada en .NET 10 + PostgreSQL, implementando contr
 
 ## Requisitos.
 
-- Docker Desktop instalado y corriendo
+- .NET SDK 10 instalado
+- Opcional: Docker Desktop (solo si deseas usar contenedores)
 
 ---
 
 ## Levantar el proyecto.
+
+### Opción A: Sin Docker (local, recomendado para desarrollo)
+
+Desde la carpeta raíz:
+
+```bash
+cd ProyectoSeguridad
+dotnet restore
+dotnet run
+```
+
+La aplicación quedará disponible en `http://localhost:5062` (según `launchSettings.json`).
+
+En desarrollo, el proyecto usa **SQLite local automáticamente** (archivo `ProyectoSeguridad.dev.db`) y no requiere PostgreSQL.
+
+### Opción B: Con Docker
 
 Desde la carpeta raíz (donde está `docker-compose.yml`):
 
