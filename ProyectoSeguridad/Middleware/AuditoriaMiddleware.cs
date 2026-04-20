@@ -66,7 +66,7 @@ namespace ProyectoSeguridad.Middleware
                 }
 
                 // Log de operaciones sensibles
-                if ((metodo == "POST" || metodo == "PUT" || metodo == "DELETE") && statusCode == 200)
+                if ((metodo == "POST" || metodo == "PUT" || metodo == "DELETE") && statusCode >= 200 && statusCode < 300)
                 {
                     await auditoriaService.LogAsync(
                         usuarioId,
