@@ -172,3 +172,23 @@ ProyectoSeguridad/
 - Invalidación de sesión por inactividad de 5 minutos
 - Log de auditoría de todos los eventos sensibles con IP y timestamp
 
+---
+
+## Exponer el proyecto a internet (ngrok)
+
+Requerido para el pentest cruzado y la revisión del profesor en Semana 13.
+
+1. Crear cuenta gratuita en https://ngrok.com
+2. Instalar ngrok y autenticarse:
+```bash
+ngrok config add-authtoken <tu-token>
+```
+3. Con el proyecto corriendo, ejecutar en otra terminal:
+```bash
+ngrok http 8080
+```
+4. ngrok genera una URL publica como `https://abc123.ngrok-free.app` — esa es la URL a compartir.
+
+La URL cambia cada vez que se reinicia ngrok. Actualizar este README y notificar al equipo Red Team asignado cuando cambie.
+
+**URL actual:** (pendiente de asignar en Semana 13)

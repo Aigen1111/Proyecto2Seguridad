@@ -1,0 +1,401 @@
+{
+  "info": {
+    "name": "ProyectoSeguridad — ISW-1013",
+    "description": "Coleccion de endpoints para la API del Proyecto 2 de Calidad del Software. Todos los endpoints protegidos requieren el token JWT obtenido del login. El token se guarda automaticamente en la variable {{token}} al hacer login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "description": "URL base del servidor. Cambiar a la URL de ngrok cuando se exponga a internet."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Token JWT. Se llena automaticamente al ejecutar el request de login."
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticacion",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.token) {",
+                  "    pm.collectionVariables.set('token', data.token);",
+                  "    console.log('Token guardado correctamente');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "description": "Inicia sesion y obtiene un token JWT valido por 1 hora. El token se guarda automaticamente en la variable {{token}}.\n\nBloquea la cuenta por 5 minutos tras 5 intentos fallidos consecutivos.\n\nUsuarios disponibles:\n- admin / Admin123! (SuperAdmin)\n- auditor / Auditor123! (Auditor)\n- registrador / Registrador123! (Registrador)"
+          },
+          "response": [
+            {
+              "name": "Login exitoso",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"message\": \"Login exitoso\"\n}"
+            },
+            {
+              "name": "Credenciales invalidas",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"token\": null,\n  \"message\": \"Usuario o contrasena invalidos\"\n}"
+            },
+            {
+              "name": "Cuenta bloqueada",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"token\": null,\n  \"message\": \"Cuenta bloqueada temporalmente. Intente mas tarde.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Registro de usuario",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo\",\n  \"email\": \"nuevo@mail.com\",\n  \"password\": \"Pass123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "description": "Registra un nuevo usuario publicamente. El usuario creado recibe el rol Registrador por defecto. No requiere autenticacion."
+          },
+          "response": [
+            {
+              "name": "Registro exitoso",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"message\": \"Usuario registrado exitosamente\"\n}"
+            },
+            {
+              "name": "Usuario ya existe",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"message\": \"El usuario ya existe\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario actual",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] },
+            "description": "Devuelve el ID del usuario autenticado actualmente. Requiere token JWT valido."
+          },
+          "response": [
+            {
+              "name": "Usuario autenticado",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Usuario autenticado\",\n  \"userId\": 1\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/productos", "host": ["{{baseUrl}}"], "path": ["api", "productos"] },
+            "description": "Lista todos los productos. Requiere autenticacion. Accesible para todos los roles (SuperAdmin, Auditor, Registrador)."
+          },
+          "response": [
+            {
+              "name": "Lista de productos",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"codigo\": \"PRD001\",\n    \"nombre\": \"Producto de prueba\",\n    \"descripcion\": \"Descripcion del producto\",\n    \"cantidad\": 10,\n    \"precio\": 9.99,\n    \"fechaCreacion\": \"2026-04-18T00:00:00Z\",\n    \"fechaActualizacion\": null,\n    \"creadorId\": 1\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Obtener producto por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/productos/1", "host": ["{{baseUrl}}"], "path": ["api", "productos", "1"] },
+            "description": "Obtiene un producto especifico por su ID. Requiere autenticacion. Accesible para todos los roles."
+          },
+          "response": [
+            {
+              "name": "Producto encontrado",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"codigo\": \"PRD001\",\n  \"nombre\": \"Producto de prueba\",\n  \"descripcion\": \"Descripcion del producto\",\n  \"cantidad\": 10,\n  \"precio\": 9.99,\n  \"fechaCreacion\": \"2026-04-18T00:00:00Z\",\n  \"fechaActualizacion\": null,\n  \"creadorId\": 1\n}"
+            },
+            {
+              "name": "Producto no encontrado",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"message\": \"Producto no encontrado\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PRD001\",\n  \"nombre\": \"Producto de prueba\",\n  \"descripcion\": \"Descripcion del producto\",\n  \"precio\": 9.99,\n  \"cantidad\": 10\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/productos", "host": ["{{baseUrl}}"], "path": ["api", "productos"] },
+            "description": "Crea un nuevo producto. Roles permitidos: SuperAdmin, Registrador.\n\nReglas de validacion:\n- codigo: solo letras mayusculas y numeros, maximo 20 caracteres, debe ser unico\n- nombre: requerido, maximo 200 caracteres\n- descripcion: opcional, maximo 500 caracteres\n- precio: requerido, entre 0.01 y 999999.99\n- cantidad: requerido, entre 0 y 1000000"
+          },
+          "response": [
+            {
+              "name": "Producto creado",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"codigo\": \"PRD001\",\n  \"nombre\": \"Producto de prueba\",\n  \"descripcion\": \"Descripcion del producto\",\n  \"cantidad\": 10,\n  \"precio\": 9.99,\n  \"fechaCreacion\": \"2026-04-18T00:00:00Z\"\n}"
+            },
+            {
+              "name": "Codigo duplicado",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"message\": \"El codigo de producto ya existe\"\n}"
+            },
+            {
+              "name": "Sin permiso",
+              "status": "Forbidden",
+              "code": 403,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Actualizar producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PRD001\",\n  \"nombre\": \"Producto actualizado\",\n  \"descripcion\": \"Nueva descripcion\",\n  \"precio\": 14.99,\n  \"cantidad\": 25\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/productos/1", "host": ["{{baseUrl}}"], "path": ["api", "productos", "1"] },
+            "description": "Actualiza un producto existente. Roles permitidos: SuperAdmin, Registrador."
+          },
+          "response": [
+            {
+              "name": "Producto actualizado",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"codigo\": \"PRD001\",\n  \"nombre\": \"Producto actualizado\",\n  \"descripcion\": \"Nueva descripcion\",\n  \"cantidad\": 25,\n  \"precio\": 14.99,\n  \"fechaActualizacion\": \"2026-04-18T01:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar producto",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/productos/1", "host": ["{{baseUrl}}"], "path": ["api", "productos", "1"] },
+            "description": "Elimina un producto. Roles permitidos: SuperAdmin, Registrador."
+          },
+          "response": [
+            {
+              "name": "Producto eliminado",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"message\": \"Producto eliminado\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/usuarios", "host": ["{{baseUrl}}"], "path": ["api", "usuarios"] },
+            "description": "Lista todos los usuarios con su rol, ultimo login e IP. Requiere autenticacion. Accesible para todos los roles."
+          },
+          "response": [
+            {
+              "name": "Lista de usuarios",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"username\": \"admin\",\n    \"email\": \"admin@seguridad.local\",\n    \"activo\": true,\n    \"ultimoLogin\": \"2026-04-18T01:24:00Z\",\n    \"ultimaIP\": \"::1\",\n    \"rol\": { \"id\": 1, \"nombre\": \"SuperAdmin\" }\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/usuarios/1", "host": ["{{baseUrl}}"], "path": ["api", "usuarios", "1"] },
+            "description": "Obtiene un usuario especifico. Roles permitidos: SuperAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar roles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/usuarios/roles", "host": ["{{baseUrl}}"], "path": ["api", "usuarios", "roles"] },
+            "description": "Lista los roles disponibles. Roles permitidos: SuperAdmin."
+          },
+          "response": [
+            {
+              "name": "Lista de roles",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  { \"id\": 1, \"nombre\": \"SuperAdmin\", \"descripcion\": \"Acceso total al sistema\" },\n  { \"id\": 2, \"nombre\": \"Auditor\", \"descripcion\": \"Visualiza logs y auditoria\" },\n  { \"id\": 3, \"nombre\": \"Registrador\", \"descripcion\": \"Gestiona productos\" }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo\",\n  \"email\": \"nuevo@mail.com\",\n  \"password\": \"Pass123!\",\n  \"rolId\": 3\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/usuarios", "host": ["{{baseUrl}}"], "path": ["api", "usuarios"] },
+            "description": "Crea un nuevo usuario. Roles permitidos: SuperAdmin.\n\nrolId: 1 = SuperAdmin, 2 = Auditor, 3 = Registrador"
+          },
+          "response": [
+            {
+              "name": "Usuario creado",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"message\": \"Usuario creado exitosamente\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Actualizar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo\",\n  \"email\": \"nuevo@mail.com\",\n  \"rolId\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/usuarios/1", "host": ["{{baseUrl}}"], "path": ["api", "usuarios", "1"] },
+            "description": "Actualiza un usuario existente. No permite cambiar la contrasena por este endpoint. Roles permitidos: SuperAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/usuarios/1", "host": ["{{baseUrl}}"], "path": ["api", "usuarios", "1"] },
+            "description": "Elimina un usuario. No se puede eliminar el propio usuario. Roles permitidos: SuperAdmin."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auditoria",
+      "item": [
+        {
+          "name": "Listar logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auditoria", "host": ["{{baseUrl}}"], "path": ["api", "auditoria"] },
+            "description": "Lista los logs de auditoria de los ultimos 7 dias. Roles permitidos: SuperAdmin.\n\nCada log incluye: timestamp, IP de origen, evento, ruta, metodo HTTP, codigo de respuesta y detalles."
+          },
+          "response": [
+            {
+              "name": "Logs de auditoria",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"total\": 48,\n  \"logs\": [\n    {\n      \"id\": 1,\n      \"timestamp\": \"2026-04-18T01:24:00Z\",\n      \"ipOrigen\": \"::1\",\n      \"evento\": \"Login Exitoso\",\n      \"rutaSolicitada\": \"/api/auth/login\",\n      \"metodo\": \"POST\",\n      \"codigoHTTP\": 200,\n      \"detalles\": null,\n      \"usuarioId\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logs de accesos denegados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auditoria/forbidden", "host": ["{{baseUrl}}"], "path": ["api", "auditoria", "forbidden"] },
+            "description": "Lista los logs de accesos denegados (HTTP 403). Roles permitidos: SuperAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Logs de logins fallidos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auditoria/failed-logins", "host": ["{{baseUrl}}"], "path": ["api", "auditoria", "failed-logins"] },
+            "description": "Lista los intentos de login fallidos. Roles permitidos: SuperAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Estadisticas de auditoria",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auditoria/stats", "host": ["{{baseUrl}}"], "path": ["api", "auditoria", "stats"] },
+            "description": "Devuelve estadisticas generales: total de logs, eventos de hoy, accesos denegados, no autorizados e IPs unicas. Roles permitidos: SuperAdmin."
+          },
+          "response": [
+            {
+              "name": "Estadisticas",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"totalLogs\": 120,\n  \"logsHoy\": 15,\n  \"accesoDenegado\": 3,\n  \"noAutorizado\": 5,\n  \"ipsUnicas\": 2\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
