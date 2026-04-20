@@ -24,6 +24,7 @@ namespace ProyectoSeguridad.Utilities
 
         [Required(ErrorMessage = "La contraseña es requerida")]
         [StringLength(100, MinimumLength = 8)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,100}$", ErrorMessage = "La contraseña debe incluir mayúscula, minúscula, número y símbolo")]
         public string Password { get; set; } = string.Empty;
     }
 
@@ -82,6 +83,7 @@ namespace ProyectoSeguridad.Utilities
 
         [Required(ErrorMessage = "La contraseña es requerida")]
         [StringLength(100, MinimumLength = 8)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,100}$", ErrorMessage = "La contraseña debe incluir mayúscula, minúscula, número y símbolo")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El rol es requerido")]
