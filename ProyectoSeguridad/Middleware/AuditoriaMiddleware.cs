@@ -21,7 +21,7 @@ namespace ProyectoSeguridad.Middleware
             var ruta = context.Request.Path.ToString();
             var metodo = context.Request.Method;
 
-            // Capturar el response status code
+            // Capturar el response status code.
             var originalBodyStream = context.Response.Body;
             using (var responseBody = new MemoryStream())
             {

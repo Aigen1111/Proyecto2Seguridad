@@ -25,13 +25,13 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Endpoint de login. Retorna JWT en Cookie HttpOnly y Secure.
+        /// Endpoint de login. Retorna JWT en Cookie HttpOnly y Secure
         /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // Validación en el backend (además de los validadores)
+            // Validación en el backend (además de los validadores).
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors);
