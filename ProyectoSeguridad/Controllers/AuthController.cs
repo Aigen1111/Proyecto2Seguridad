@@ -89,7 +89,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Endpoint de registro para crear nuevos usuarios con rol Registrador.
+        /// Endpoint de registro para crear nuevos usuarios con rol Registrador
         /// </summary>
         [HttpPost("register")]
         [AllowAnonymous]

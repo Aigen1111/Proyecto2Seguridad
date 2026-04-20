@@ -27,7 +27,7 @@ namespace ProyectoSeguridad.Models
         public Usuario? Usuario { get; set; }
 
         [StringLength(20)]
-        public string? Metodo { get; set; } // GET, POST, PUT, DELETE
+        public string? Metodo { get; set; } // GET, POST, PUT, DELETE.
 
         public int? CodigoHTTP { get; set; }
 

@@ -1,16 +1,16 @@
-# ProyectoSeguridad — ISW-1013 Calidad del Software
+# ProyectoSeguridad — ISW-1013 Calidad del Software.
 
 Aplicación web segura desarrollada en .NET 10 + PostgreSQL, implementando controles de seguridad según OWASP Top 10.
 
 ---
 
-## Requisitos
+## Requisitos.
 
 - Docker Desktop instalado y corriendo
 
 ---
 
-## Levantar el proyecto
+## Levantar el proyecto.
 
 Desde la carpeta raíz (donde está `docker-compose.yml`):
 
@@ -34,7 +34,7 @@ docker-compose down -v
 
 ---
 
-## Credenciales por defecto
+## Credenciales por defecto.
 
 | Usuario | Contraseña | Rol |
 |---------|------------|-----|
@@ -44,11 +44,11 @@ docker-compose down -v
 
 ---
 
-## Documentación de la API
+## Documentación de la API.
 
 Todos los endpoints protegidos requieren autenticación JWT. El token se obtiene del endpoint de login y se envía como cookie HttpOnly automáticamente, o como header `Authorization: Bearer <token>`.
 
-### Autenticación
+### Autenticación.
 
 **POST /api/auth/login**
 No requiere autenticación. Devuelve un JWT válido por 1 hora si las credenciales son correctas. Implementa bloqueo de cuenta tras 5 intentos fallidos.
@@ -75,7 +75,7 @@ Requiere autenticación. Devuelve el ID del usuario autenticado.
 
 ---
 
-### Productos
+### Productos.
 
 Todos los endpoints requieren autenticación.
 
