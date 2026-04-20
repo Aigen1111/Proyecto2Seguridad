@@ -40,6 +40,8 @@ namespace ProyectoSeguridad.Controllers
         {
             try
             {
+                var isSuperAdmin = User.IsInRole("SuperAdmin");
+
                 var usuarios = await _context.Usuarios
                     .Include(u => u.Rol)
                     .Where(u => u.Activo)
@@ -50,8 +52,8 @@ namespace ProyectoSeguridad.Controllers
                         u.Email,
                         rolId = u.RolId,
                         rol = new { u.Rol!.Id, u.Rol.Nombre },
-                        u.UltimoLogin,
-                        u.UltimaIP,
+                        UltimoLogin = isSuperAdmin ? u.UltimoLogin : null,
+                        UltimaIP = isSuperAdmin ? u.UltimaIP : null,
                         u.Activo,
                         u.FechaCreacion
                     })
