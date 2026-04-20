@@ -33,7 +33,7 @@ namespace ProyectoSeguridad.Controllers
 
         /// <summary>
         /// Obtiene lista de usuarios. Acceso: SuperAdmin, Auditor, Registrador (solo lectura).
-        /// RF-04: Muestra username, email, rol, último login e IP.
+        /// RF-04: Muestra username, email, rol, último login e IP
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetUsuarios()

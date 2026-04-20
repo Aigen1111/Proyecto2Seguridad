@@ -13,7 +13,7 @@ namespace ProyectoSeguridad.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Inyectar headers de seguridad
+            // Inyectar headers de seguridad.
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
             context.Response.Headers.Append("X-Frame-Options", "DENY");
             context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");

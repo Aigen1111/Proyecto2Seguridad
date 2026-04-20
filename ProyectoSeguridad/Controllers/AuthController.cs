@@ -134,7 +134,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Endpoint protegido para obtener información del usuario actual.
+        /// Endpoint protegido para obtener información del usuario actual
         /// </summary>
         [HttpGet("me")]
         [Authorize]

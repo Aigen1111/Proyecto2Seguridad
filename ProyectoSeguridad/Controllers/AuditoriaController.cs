@@ -23,7 +23,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene logs de auditoría. Solo SuperAdmin y Auditor.
+        /// Obtiene logs de auditoría. Solo SuperAdmin y Auditor
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "SuperAdmin")]
