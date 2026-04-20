@@ -21,7 +21,7 @@ namespace ProyectoSeguridad.Middleware
             var ruta = context.Request.Path.ToString();
             var metodo = context.Request.Method;
 
-            // Capturar el response status code.
+            // Capturar el response status code
             var originalBodyStream = context.Response.Body;
             using (var responseBody = new MemoryStream())
             {
@@ -39,7 +39,7 @@ namespace ProyectoSeguridad.Middleware
 
                 var statusCode = context.Response.StatusCode;
 
-                // Log de 403 Forbidden y 401 Unauthorized
+                // Log de 403 Forbidden y 401 Unauthorized.
                 if (statusCode == 403)
                 {
                     await auditoriaService.LogAsync(
