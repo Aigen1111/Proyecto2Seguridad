@@ -23,7 +23,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene logs de auditoría. Solo SuperAdmin y Auditor
+        /// Obtiene logs de auditoría. Solo SuperAdmin y Auditor.
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "SuperAdmin")]
@@ -60,7 +60,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene logs de accesos denegados (403). Solo SuperAdmin y Auditor
+        /// Obtiene logs de accesos denegados (403). Solo SuperAdmin y Auditor.
         /// </summary>
         [HttpGet("forbidden")]
         [Authorize(Roles = "SuperAdmin,Auditor")]
@@ -84,7 +84,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene logs de intentos fallidos de login. Solo SuperAdmin
+        /// Obtiene logs de intentos fallidos de login. Solo SuperAdmin.
         /// </summary>
         [HttpGet("failed-logins")]
         [Authorize(Roles = "SuperAdmin")]

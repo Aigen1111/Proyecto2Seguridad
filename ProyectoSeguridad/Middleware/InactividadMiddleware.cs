@@ -16,13 +16,13 @@ namespace ProyectoSeguridad.Middleware
 
         public async Task InvokeAsync(HttpContext context, IAuthService authService)
         {
-            // Solo procesar si el usuario está autenticado
+            // Solo procesar si el usuario está autenticado.
             if (context.User.Identity?.IsAuthenticated == true)
             {
                 var usuarioIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
                 if (int.TryParse(usuarioIdClaim?.Value, out int usuarioId))
                 {
-                    // Verificar inactividad (5 minutos)
+                    // Verificar inactividad (5 minutos).
                     if (await authService.CheckInactivityAsync(usuarioId, 5))
                     {
                         context.Response.StatusCode = 401;
@@ -30,7 +30,7 @@ namespace ProyectoSeguridad.Middleware
                         return;
                     }
 
-                    // Actualizar última actividad
+                    // Actualizar última actividad.
                     var ipAddress = GetIpAddress(context);
                     await authService.UpdateLastActivityAsync(usuarioId, ipAddress);
                 }
