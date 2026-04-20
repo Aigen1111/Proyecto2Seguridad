@@ -137,7 +137,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Actualiza un producto. Solo SuperAdmin
+        /// Actualiza un producto. Solo SuperAdmin.
         /// </summary>
         [HttpPut("{id}")]
         [Authorize(Roles = "SuperAdmin,Registrador")]
@@ -157,7 +157,7 @@ namespace ProyectoSeguridad.Controllers
                     return NotFound(new { message = "Producto no encontrado" });
                 }
 
-                // Verificar que el código no se duplique
+                // Verificar que el código no se duplique.
                 if (producto.Codigo != dto.Codigo &&
                     await _context.Productos.AnyAsync(p => p.Codigo == dto.Codigo))
                 {
@@ -194,7 +194,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Elimina un producto. Solo SuperAdmin
+        /// Elimina un producto. Solo SuperAdmin.
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "SuperAdmin,Registrador")]
