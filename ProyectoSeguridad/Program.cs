@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
 using ProyectoSeguridad.Data;
 using ProyectoSeguridad.Services;
 using ProyectoSeguridad.Middleware;
@@ -12,14 +11,36 @@ using AppModels = ProyectoSeguridad.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // ==================== CONFIGURACIÓN DE CONEXIÓN A BD ====================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var databaseProvider = builder.Configuration["Database:Provider"]?.Trim().ToLowerInvariant();
+if (string.IsNullOrWhiteSpace(databaseProvider))
+{
+    databaseProvider = builder.Environment.IsDevelopment() ? "sqlite" : "postgres";
+}
+
+var useSqlite = databaseProvider == "sqlite";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+{
+    if (useSqlite)
+    {
+        var sqliteConnectionString = builder.Configuration.GetConnectionString("SqliteConnection")
+            ?? "Data Source=ProyectoSeguridad.dev.db";
+        options.UseSqlite(sqliteConnectionString);
+        return;
+    }
+
+    var postgresConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    options.UseNpgsql(postgresConnectionString);
+});
 
 // ==================== AUTENTICACIÓN Y AUTORIZACIÓN ====================
-var jwtKey = builder.Configuration["Jwt:SecretKey"] ?? "your-256-bit-secret-key-change-this-in-production";
+var jwtKey = builder.Configuration["Jwt:SecretKey"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+{
+    throw new InvalidOperationException("Jwt:SecretKey debe estar configurada y tener al menos 32 caracteres.");
+}
+
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "ProyectoSeguridad";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ProyectoSeguridad";
 
@@ -100,9 +121,18 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // Aplicar migraciones
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Migraciones de BD aplicadas exitosamente");
+        if (useSqlite)
+        {
+            // SQLite local: crea schema si no existe sin depender de migraciones de PostgreSQL.
+            await context.Database.EnsureCreatedAsync();
+            logger.LogInformation("Esquema SQLite verificado/creado exitosamente");
+        }
+        else
+        {
+            // PostgreSQL: aplicar migraciones versionadas.
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Migraciones de BD aplicadas exitosamente");
+        }
 
         // Seeding de datos iniciales
         var admin = await context.Usuarios.FirstOrDefaultAsync(u => u.Username == "admin");
@@ -192,6 +222,11 @@ app.UseStaticFiles();    // sirve css/, js/, etc.
 
 
 //app.UseHttpsRedirection(); // Deshabilitado para desarrollo local sin HTTPS, habilitar en producción
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuditoria();
 app.UseInactividad();
 
