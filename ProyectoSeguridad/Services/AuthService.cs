@@ -67,6 +67,12 @@ namespace ProyectoSeguridad.Services
                     return (false, null, "Usuario o contraseña inválidos");
                 }
 
+                if (!usuario.Activo)
+                {
+                    _logger.LogWarning($"Intento de login para cuenta desactivada: {username} desde IP {ipAddress}");
+                    return (false, null, "Usuario o contraseña inválidos");
+                }
+
                 // Verificar si la cuenta está bloqueada por rate limiting.
                 if (await IsAccountLockedAsync(usuario.Id))
                 {
@@ -168,7 +174,7 @@ namespace ProyectoSeguridad.Services
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"] ?? "default-secret-key-must-be-changed");
+                var key = GetJwtKeyBytes();
 
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
@@ -231,8 +237,7 @@ namespace ProyectoSeguridad.Services
 
         private string GenerateJwtToken(Usuario usuario)
         {
-            var key = Encoding.ASCII.GetBytes(
-                _configuration["Jwt:SecretKey"] ?? "default-secret-key-must-be-changed-in-production");
+            var key = GetJwtKeyBytes();
 
             var claims = new List<Claim>
             {
@@ -256,6 +261,17 @@ namespace ProyectoSeguridad.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        private byte[] GetJwtKeyBytes()
+        {
+            var secret = _configuration["Jwt:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secret) || secret.Length < 32)
+            {
+                throw new InvalidOperationException("Jwt:SecretKey debe estar configurada y tener al menos 32 caracteres.");
+            }
+
+            return Encoding.ASCII.GetBytes(secret);
         }
     }
 }
