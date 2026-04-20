@@ -32,8 +32,8 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene lista de usuarios. Acceso: SuperAdmin, Auditor, Registrador (solo lectura).
-        /// RF-04: Muestra username, email, rol, último login e IP.
+        /// Obtiene lista de usuarios. Acceso: SuperAdmin, Auditor, Registrador (solo lectura)
+        /// RF-04: Muestra username, email, rol, último login e IP
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetUsuarios()
@@ -68,7 +68,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene un usuario por ID. Solo SuperAdmin.
+        /// Obtiene un usuario por ID. Solo SuperAdmin
         /// </summary>
         [HttpGet("{id}")]
         [Authorize(Roles = "SuperAdmin")]

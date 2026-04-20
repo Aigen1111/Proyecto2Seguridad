@@ -29,7 +29,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Obtiene lista de productos. Acceso: SuperAdmin, Auditor, Registrador
+        /// Obtiene lista de productos. Acceso: SuperAdmin, Auditor, Registrador.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetProductos()
@@ -76,7 +76,7 @@ namespace ProyectoSeguridad.Controllers
         }
 
         /// <summary>
-        /// Crea un nuevo producto. Solo SuperAdmin y Registrador
+        /// Crea un nuevo producto. Solo SuperAdmin y Registrador.
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "SuperAdmin,Registrador")]
@@ -88,13 +88,13 @@ namespace ProyectoSeguridad.Controllers
                 return BadRequest(new { message = "Validación fallida", errors });
             }
 
-            // Validación adicional del backend
+            // Validación adicional del backend.
             if (string.IsNullOrWhiteSpace(dto.Codigo) || dto.Codigo.Length > 20)
             {
                 return BadRequest(new { message = "Código inválido" });
             }
 
-            // Verificar código único (prevención de SQL Injection usando LINQ)
+            // Verificar código único (prevención de SQL Injection usando LINQ).
             if (await _context.Productos.AnyAsync(p => p.Codigo == dto.Codigo))
             {
                 return BadRequest(new { message = "El código de producto ya existe" });

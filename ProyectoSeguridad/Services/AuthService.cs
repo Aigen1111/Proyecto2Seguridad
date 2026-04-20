@@ -67,17 +67,17 @@ namespace ProyectoSeguridad.Services
                     return (false, null, "Usuario o contraseña inválidos");
                 }
 
-                // Verificar si la cuenta está bloqueada por rate limiting
+                // Verificar si la cuenta está bloqueada por rate limiting.
                 if (await IsAccountLockedAsync(usuario.Id))
                 {
                     _logger.LogWarning($"Intento de login bloqueado por rate limiting: {username} desde IP {ipAddress}");
                     return (false, null, "Cuenta bloqueada temporalmente. Intente más tarde.");
                 }
 
-                // Verificar contraseña
+                // Verificar contraseña.
                 if (!await VerifyPasswordAsync(password, usuario.PasswordHash))
                 {
-                    // Incrementar intentos fallidos
+                    // Incrementar intentos fallidos.
                     usuario.IntentosFallidos++;
                     if (usuario.IntentosFallidos >= RateLimitMaxIntents)
                     {
@@ -90,7 +90,7 @@ namespace ProyectoSeguridad.Services
                     return (false, null, "Usuario o contraseña inválidos");
                 }
 
-                // Restablecer intentos fallidos
+                // Restablecer intentos fallidos.
                 usuario.IntentosFallidos = 0;
                 usuario.FechaBloqueoCuenta = null;
                 usuario.UltimoLogin = DateTime.UtcNow;
@@ -99,7 +99,7 @@ namespace ProyectoSeguridad.Services
 
                 await _context.SaveChangesAsync();
 
-                // Generar JWT
+                // Generar JWT.
                 var token = GenerateJwtToken(usuario);
 
                 _logger.LogInformation($"Login exitoso para: {username} desde IP {ipAddress}");
