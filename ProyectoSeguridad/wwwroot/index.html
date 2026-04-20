@@ -286,7 +286,7 @@ tr:hover td { background: var(--bg); }
 <script>
 // ════════════ STATE ════════════
 let state = {
-  token: null, user: null,
+  user: null,
   editProdId: null, editUserId: null,
   deleteAction: null,
   inactivityTimer: null,
@@ -341,17 +341,20 @@ async function doLogin() {
     });
     const data = await res.json();
     if (!res.ok || !data.success) { showAlert('loginAlert', data.message || 'Credenciales incorrectas'); return; }
-    state.token = data.token;
-    // Decode JWT
-    try {
-      const payload = JSON.parse(atob(data.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      state.user = {
-        id:       payload['nameid'],
-        username: payload['unique_name'],
-        email:    payload['email'],
-        role:     payload['role'],
-      };
-    } catch { state.user = { username, role:'User' }; }
+
+    const meRes = await fetch('/api/auth/me', { method:'GET', credentials:'include' });
+    if (!meRes.ok) {
+      showAlert('loginAlert', 'No se pudo obtener la sesión del usuario.');
+      return;
+    }
+
+    const meData = await meRes.json();
+    state.user = {
+      id: meData.userId,
+      username: meData.username || username,
+      email: meData.email,
+      role: meData.role || 'User'
+    };
 
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('appShell').classList.remove('hidden');
@@ -371,7 +374,7 @@ async function doLogin() {
 
 function doLogout() {
   clearTimeout(state.inactivityTimer);
-  state = { token:null, user:null, editProdId:null, editUserId:null, deleteAction:null, inactivityTimer:null };
+  state = { user:null, editProdId:null, editUserId:null, deleteAction:null, inactivityTimer:null };
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('appShell').classList.add('hidden');
   document.getElementById('loginPass').value = '';
@@ -391,13 +394,12 @@ function startInactivity() {
   }, 4.5 * 60 * 1000);
 }
 ['mousemove','keydown','click'].forEach(ev =>
-  document.addEventListener(ev, () => { if (state.token) startInactivity(); })
+  document.addEventListener(ev, () => { if (state.user) startInactivity(); })
 );
 
 // ════════════ API HELPER ════════════
 async function api(method, url, body) {
   const opts = { method, credentials:'include', headers:{'Content-Type':'application/json'} };
-  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
   if (res.status === 401) {
