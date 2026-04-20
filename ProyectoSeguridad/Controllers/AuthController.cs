@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSeguridad.Services;
@@ -64,11 +65,16 @@ namespace ProyectoSeguridad.Controllers
             }
 
             // Configurar cookie HttpOnly y Secure
+            var isDevelopment = HttpContext.RequestServices
+                .GetRequiredService<IWebHostEnvironment>()
+                .IsDevelopment();
+
             Response.Cookies.Append("Authorization", token!, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false, // Cambiar a true en producción con HTTPS
+                Secure = !isDevelopment,
                 SameSite = SameSiteMode.Strict,
+                IsEssential = true,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
@@ -83,7 +89,7 @@ namespace ProyectoSeguridad.Controllers
             return Ok(new LoginResponse
             {
                 Success = true,
-                Token = token,
+                Token = null,
                 Message = message
             });
         }
@@ -138,16 +144,21 @@ namespace ProyectoSeguridad.Controllers
         /// </summary>
         [HttpGet("me")]
         [Authorize]
-        public async Task<IActionResult> GetCurrentUser()
+        public IActionResult GetCurrentUser()
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdClaim?.Value, out int userId))
             {
                 return Unauthorized();
             }
 
-            // Aquí obtendrías la información del usuario de la BD
-            return Ok(new { message = "Usuario autenticado", userId });
+            return Ok(new
+            {
+                userId,
+                username = User.FindFirst(ClaimTypes.Name)?.Value,
+                email = User.FindFirst(ClaimTypes.Email)?.Value,
+                role = User.FindFirst(ClaimTypes.Role)?.Value
+            });
         }
 
         private string GetIpAddress()
