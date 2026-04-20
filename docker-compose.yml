@@ -1,6 +1,6 @@
 services:
 
-  # ==================== BASE DE DATOS ====================
+  # ===================== BASE DE DATOS =====================
   postgres:
     image: postgres:15-alpine
     container_name: proyecto_seguridad_db
